@@ -1,0 +1,36 @@
+# cloudbuild.yaml for the Customer Service Agent
+
+steps:
+  # Step 1: Install dependencies using Poetry
+  # This step reads your pyproject.toml and installs all necessary libraries.
+- name: 'python:3.11'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      pip install poetry
+      poetry install --no-root --no-dev
+
+  # Step 2: Build the agent into a wheel file
+  # This creates the distributable package for deployment.
+- name: 'python:3.11'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      pip install poetry
+      poetry build --format=wheel --output=deployment
+
+  # Step 3: Deploy the agent to Agent Engine
+  # This runs the deploy.py script within the correct Poetry environment.
+- name: 'python:3.11'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      pip install poetry
+      cd deployment
+      poetry run python deploy.py
+
+# Set a timeout for the entire build process. Deployments can be slow.
+timeout: '1800s' # 30 minutes

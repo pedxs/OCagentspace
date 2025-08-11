@@ -233,50 +233,148 @@ You can find further configuration parameters in [customer_service/config.py](./
 
 ## Deployment on Google Agent Engine
 
-In order to inherit all dependencies of your agent you can build the wheel file of the agent and run the deployment.
+To deploy the agent to the Google Agent Engine, you need to build the agent as a wheel file and then run the deployment script.
 
-1.  **Build Customer Service Agent WHL file**
+### 1. Build the Agent Wheel File
 
-    ```bash
-    poetry build --format=wheel --output=deployment
-    ```
+This command bundles the agent into a standardized `.whl` (wheel) file, which is required for deployment. The wheel file will be created in the `deployment` directory.
 
-1.  **Deploy the agent to agents engine**
-    It is important to run deploy.py from within deployment folder so paths are correct
-
-    ```bash
-    cd deployment
-    python deploy.py
-    ```
-
-### Testing deployment
-
-This code snippet is an example of how to test the deployed agent.
-
+```bash
+poetry build --format=wheel --output=deployment
 ```
+
+### 2. Deploy the Agent to Agent Engine
+
+The deployment script `deploy.py` is located in the `deployment` directory. It's important to run the script from within this directory to ensure all paths are resolved correctly.
+
+Before running the deployment, make sure you have authenticated with Google Cloud:
+```bash
+gcloud auth login
+gcloud auth application-default login
+```
+
+It is also crucial to ensure that the deployment script uses the correct Google Cloud project. You can force the script to use the correct project by setting the `GOOGLE_CLOUD_PROJECT` environment variable for the deployment command.
+
+Navigate to the deployment directory and run the deployment command:
+
+```bash
+cd deployment
+GOOGLE_CLOUD_PROJECT="your-gcp-project-id" poetry run python deploy.py
+```
+
+Replace `"your-gcp-project-id"` with your actual Google Cloud project ID.
+
+The deployment process will take a few minutes. When it finishes, it will print the agent's unique **Resource Name**. It will look like:
+`projects/your-gcp-project-id/locations/us-central1/reasoningEngines/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
+
+**Copy this full resource name.** You will need it for the next steps.
+
+### 3. Testing the Deployed Agent
+
+You can test the deployed agent by creating a Python script and using the resource name you copied from the previous step.
+
+Create a new Python file (e.g., `test_agent.py`) with the following content:
+
+```python
 import vertexai
-from customer_service.config import Config
-from vertexai.preview.reasoning_engines import AdkApp
+from vertexai import agent_engines
 
+# --- Your Configuration ---
+PROJECT_ID = "your-gcp-project-id"
+LOCATION = "us-central1"
+AGENT_RESOURCE_NAME = "paste-your-agent-resource-name-here"
+# --- End Configuration ---
 
-configs = Config()
+# Initialize connection to Vertex AI
+vertexai.init(project=PROJECT_ID, location=LOCATION)
 
-vertexai.init(
-    project="<GOOGLE_CLOUD_LOCATION_PROJECT_ID>",
-    location="<GOOGLE_CLOUD_LOCATION>"
-)
+# Get a reference to your deployed agent
+remote_agent = agent_engines.get(AGENT_RESOURCE_NAME)
+print(f"Successfully connected to agent:\n{AGENT_RESOURCE_NAME}")
 
-# get the agent based on resource id
-agent_engine = vertexai.agent_engines.get('DEPLOYMENT_RESOURCE_NAME') # looks like this projects/PROJECT_ID/locations/LOCATION/reasoningEngines/REASONING_ENGINE_ID
+# Start a conversation
+print("\nSending 'hi there' to the agent...")
+session = remote_agent.create_session(user_id="test_user")
+print(f"Created session: {session['id']}")
 
+print("\n--- Agent's Live Response ---")
 for event in remote_agent.stream_query(
-    user_id=USER_ID,
+    user_id="test_user",
     session_id=session["id"],
-    message="Hello!",
+    message="hi there"
 ):
-    print(event)
-
+    if "content" in event:
+        print(event["content"], end="")
+print("\n--------------------------")
 ```
+
+Replace `"your-gcp-project-id"` and `"paste-your-agent-resource-name-here"` with your actual project ID and agent resource name.
+
+Run the test script:
+```bash
+poetry run python test_agent.py
+```
+You should see the agent's friendly greeting printed in your terminal.
+
+## Connect to AgentSpace
+
+After deploying the agent to the Agent Engine, you can register it as a tool in your AgentSpace application. This allows your user-facing agent to delegate tasks to your newly deployed customer service agent.
+
+### 1. Grant IAM Permissions
+
+Before you can register the agent, you need to grant the necessary permissions in the Google Cloud Console. The "Hub" agent (your AgentSpace app) needs permission to call the "Spoke" agent (your Reasoning Engine).
+
+1.  Go to the **IAM & Admin** page in the Google Cloud Console.
+2.  Click the **+ GRANT ACCESS** button.
+3.  In the "New principals" box, find the service account for your AgentSpace app. It will be in the format: `service-<PROJECT_NUMBER>@gcp-sa-discoveryengine.iam.gserviceaccount.com`.
+4.  Assign the **Vertex AI User** role to this service account.
+5.  Click **Save**.
+
+### 2. Register the Agent as a Tool
+
+To register the agent, you will use a `curl` command. This command needs a temporary access token.
+
+**Step 1: Get Your Access Token**
+
+Run this command by itself first to get a fresh, temporary access token.
+
+```bash
+gcloud auth print-access-token
+```
+You will get a long string of characters as output. Copy this token for the next step.
+
+**Step 2: Run the `curl` Command**
+
+Now, use the following `curl` command. **Before you press Enter**, replace the placeholder `PASTE_YOUR_TOKEN_HERE` with the actual token you just copied. You also need to replace the placeholders for your project ID, engine ID and reasoning engine ID.
+
+```bash
+# Set your Project ID
+export PROJECT_ID="your-gcp-project-id"
+
+# Replace the placeholder and run the command
+curl -X POST \
+  -H "Authorization: Bearer PASTE_YOUR_TOKEN_HERE" \
+  -H "Content-Type: application/json" \
+  -H "X-Goog-User-Project: ${PROJECT_ID}" \
+  "https://discoveryengine.googleapis.com/v1alpha/projects/${PROJECT_ID}/locations/global/collections/default_collection/engines/your-engine-id/assistants/default_assistant/agents" \
+  -d '{
+    "displayName": "CJ Customer Service Agent",
+    "description": "CJ Customer Service Agent",
+    "icon": {
+       "uri": "https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/support_agent/default/24px.svg"
+     },
+    "adk_agent_definition": {
+      "tool_settings": {
+        "tool_description": "A specialist agent that handles complex, real-time customer service tasks. Use this for any requests related to a customer shopping cart, modifying an order, checking product inventory, scheduling a service appointment, or getting personalized product recommendations."
+      },
+      "provisioned_reasoning_engine": {
+        "reasoning_engine": "projects/your-gcp-project-id/locations/us-central1/reasoningEngines/your-reasoning-engine-id"
+      }
+    }
+  }'
+```
+
+If successful, the command will return a JSON response describing the new agent connection it just created. You should then be able to see the "CJ Customer Service Agent" listed as an available tool in your AgentSpace configuration.
 
 ## Disclaimer
 
