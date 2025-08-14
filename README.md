@@ -1,86 +1,34 @@
-# Cymbal Home & Garden Customer Service Agent
+# OC Agent
 
-This project implements an AI-powered customer service agent for Cymbal Home & Garden, a big-box retailer specializing in home improvement, gardening, and related supplies. The agent is designed to provide excellent customer service, assist customers with product selection, manage orders, schedule services, and offer personalized recommendations.
+This project implements an AI-powered agent for summarizing OC Morning Call meetings.
 
 ## Overview
 
-The Cymbal Home & Garden Customer Service Agent is designed to provide a seamless and personalized shopping experience for customers. It leverages Gemini to understand customer needs, offer tailored product recommendations, manage orders, and schedule services. The agent is designed to be friendly, empathetic, and highly efficient, ensuring that customers receive the best possible service.
+The OC Agent is designed to take a meeting transcript as input and generate a summary in Thai. The summary is structured around 6 main topics to provide a clear and concise overview of the meeting.
 
 ## Agent Details
 
-The key features of the Customer Service Agent include:
+The key features of the OC Agent include:
 
 | Feature            | Description             |
 | ------------------ | ----------------------- |
 | _Interaction Type_ | Conversational          |
-| _Complexity_       | Intermediate            |
+| _Complexity_       | Basic                   |
 | _Agent Type_       | Single Agent            |
-| _Components_       | Tools, Multimodal, Live |
-| _Vertical_         | Retail                  |
+| _Components_       | None                    |
+| _Vertical_         | Internal Communications |
 
 ### Agent Architecture
 
-![Customer Service Agent Workflow](customer_service_workflow.png)
-
-The agent is built using a multi-modal architecture, combining text and video inputs to provide a rich and interactive experience. It mocks interactions with various tools and services, including a product catalog, inventory management, order processing, and appointment scheduling systems. The agent also utilizes a session management system to maintain context across interactions and personalize the customer experience.
-
-It is important to notice that this agent is not integrated to an actual backend and the behaviour is based on mocked tools. If you would like to implement this agent with actual backend integration you will need to edit [customer_service/tools.py](./customer_service/tools/tools.py)
-
-Because the tools are mocked you might notice that some requested changes will not be applied. For instance newly added item to cart will not show if later a user asks the agent to list all items.
+The agent is a simple agent that uses the Gemini model to generate a summary based on a given transcript. It does not use any external tools.
 
 ### Key Features
 
-- **Personalized Customer Assistance:**
-  - Greets returning customers by name and acknowledges their purchase history.
-  - Maintains a friendly, empathetic, and helpful tone.
-- **Product Identification and Recommendation:**
-  - Assists customers in identifying plants, even from vague descriptions.
-  - Requests and utilizes visual aids (video) to accurately identify plants.
-  - Provides tailored product recommendations based on identified plants, customer needs, and location (e.g., Las Vegas, NV).
-  - Offers alternatives to items in the customer's cart if better options exist.
-- **Order Management:**
-  - Accesses and displays the contents of a customer's shopping cart.
-  - Modifies the cart by adding and removing items based on recommendations and customer approval.
-  - Informs customers about relevant sales and promotions.
-- **Upselling and Service Promotion:**
-  - Suggests relevant services, such as professional planting services.
-  - Handles inquiries about pricing and discounts, including competitor offers.
-  - Requests manager approval for discounts when necessary.
-- **Appointment Scheduling:**
-  - Schedules appointments for planting services (or other services).
-  - Checks available time slots and presents them to the customer.
-  - Confirms appointment details and sends a confirmation/calendar invite.
-- **Customer Support and Engagement:**
-  - Sends via sms or email plant care instructions relevant to the customer's purchases and location.
-  - Offers a discount QR code for future in-store purchases to loyal customers.
-- **Tool-Based Interactions:**
-  - The agent interacts with the user using a set of tools.
-  - The agent can use multiple tools in a single interaction.
-  - The agent can use the tools to get information and to modify the user's transaction state.
-- **Evaluation:**
-  - The agent can be evaluated using a set of test cases.
-  - The evaluation is based on the agent's ability to use the tools and to respond to the user's requests.
-
-#### Agent State - Default customer information
-
-The agent's session state is preloaded with sample customer data, simulating a real conversation. Ideally, this state should be loaded from a CRM system at the start of the conversation, using the user's information. This assumes that either the agent authenticates the user or the user is already logged in. If this behavior is expected to be modified edit the [get_customer(current_customer_id: str) in customer.py](./customer_service/entities/customer.py)
-
-#### Tools
-
-The agent has access to the following tools:
-
-- `send_call_companion_link(phone_number: str) -> str`: Sends a link for video connection.
-- `approve_discount(type: str, value: float, reason: str) -> str`: Approves a discount (within pre-defined limits).
-- `sync_ask_for_approval(type: str, value: float, reason: str) -> str`: Requests discount approval from a manager.
-- `update_salesforce_crm(customer_id: str, details: str) -> dict`: Updates customer records in Salesforce.
-- `access_cart_information(customer_id: str) -> dict`: Retrieves the customer's cart contents.
-- `modify_cart(customer_id: str, items_to_add: list, items_to_remove: list) -> dict`: Updates the customer's cart.
-- `get_product_recommendations(plant_type: str, customer_id: str) -> dict`: Suggests suitable products.
-- `check_product_availability(product_id: str, store_id: str) -> dict`: Checks product stock.
-- `schedule_planting_service(customer_id: str, date: str, time_range: str, details: str) -> dict`: Books a planting service appointment.
-- `get_available_planting_times(date: str) -> list`: Retrieves available time slots.
-- `send_care_instructions(customer_id: str, plant_type: str, delivery_method: str) -> dict`: Sends plant care information.
-- `generate_qr_code(customer_id: str, discount_value: float, discount_type: str, expiration_days: int) -> dict`: Creates a discount QR code.
+- **Meeting Summary:**
+  - Generates a summary of a meeting transcript in Thai.
+  - The summary is structured into 6 main topics.
+- **Input Prompt:**
+  - The agent first prompts the user to upload a meeting transcript.
 
 ## Setup and Installations
 
@@ -107,7 +55,7 @@ The agent has access to the following tools:
     gcloud services enable aiplatform.googleapis.com
     ```
 
-1.  Clone the repository:
+2.  Clone the repository:
 
     ```bash
     git clone https://github.com/google/adk-samples.git
@@ -116,7 +64,7 @@ The agent has access to the following tools:
 
     For the rest of this tutorial **ensure you remain in the `agents/customer-service` directory**.
 
-2.  Install dependencies using Poetry:
+3.  Install dependencies using Poetry:
 
 - if you have not installed poetry before then run `pip install poetry` first. then you can create your virtual environment and install all dependencies using:
 
@@ -130,7 +78,7 @@ The agent has access to the following tools:
   poetry env activate
   ```
 
-3.  Set up Google Cloud credentials:
+4.  Set up Google Cloud credentials:
 
     - Ensure you have a Google Cloud project.
     - Make sure you have the Vertex AI API enabled in your project.
@@ -159,77 +107,41 @@ from the root project directory:
     ```
     Select the customer_service from the dropdown
 
-### Example Interaction
+## Modifying the Agent's Instructions
 
-Here's a quick example of how a user might interact with the agent:
+The core behavior of the agent is defined by the instructions in the `customer_service/prompts.py` file. You can modify the agent's persona, its task, and its constraints by editing the `INSTRUCTION` variable in this file.
 
-**User:**:
-hi there
+### 1. Locate the `INSTRUCTION` Variable
 
-**Agent**:
-Hey Alex, I see you've been a Cymbal Home & Garden customer for a couple of years now - we appreciate your business! I also see you have a few things in your cart already. How can I help you get your garden growing today?
+Open the file `customer_service/prompts.py`. Inside this file, you will find a Python variable named `INSTRUCTION`. It's a multi-line string that contains the core instructions for the agent.
 
-**User**:
-Yeah, so I'm a bit confused. I just bought some...uh...plants or flowers that I wanted to put in the backyard. They just say "sun loving annuals" on them. I totally spaced on picking up potting soil so I'm placing an order for pickup now. The problem is, I'm not sure if the potting soil and fertilizer I picked out are the right ones.
+### 2. Modify the `INSTRUCTION` String
 
-**Agent**:
-I understand – it can be tricky when you're not quite sure what you've got! Let's figure this out together. Don't worry, we'll get your plants the right care. To best help you, would you be willing to share a quick video of the plants you've purchased? That will help me identify them and make sure you have the right supplies.
+To change the agent's behavior, you simply need to edit the text within the triple quotes (`"""..."""`) of the `INSTRUCTION` variable.
 
-**User**:
-Sure, how do I do that?
+For example, if you wanted to change the agent's persona to be more formal, you could change the beginning of the instruction from:
 
-**Agent**:
-I just texted you a link to the number in your profile. Just click on that, and it'll open a secure video connection.
+```python
+INSTRUCTION = """
+You are the OC-Agent. Your task is to prepare a summary of the OC Morning Call meeting.
 
-```tool_code
-print(send_call_companion_link(phone_number='+12065550123'))
+First, invite the user to upload the meeting transcript...
+"""
 ```
 
-```tool_outputs
-{'status': 'success', 'message': 'Link sent to +12065550123'}
+to something like:
+
+```python
+INSTRUCTION = """
+You are a professional assistant. Your primary function is to generate a formal summary of the OC Morning Call meeting.
+
+Your first action should be to request the user to provide the meeting transcript...
+"""
 ```
 
-**User**:
-Okay, I clicked the link...can you see this?
+### 3. Redeploy the Agent
 
-**Agent**:
-Yes I can see you Alex! Can you go ahead and point the camera at your plants so I can inspect them?
-
-**User**:
-Yes of course!
-...
-
-## Evaluating the Agent
-
-Evaluation tests assess the overall performance and capabilities of the agent in a holistic manner.
-
-**Steps:**
-
-1.  **Run Evaluation Tests:**
-
-    ```bash
-    pytest eval
-    ```
-
-    - This command executes all test files within the `eval` directory.
-
-## Unit Tests
-
-Unit tests focus on testing individual units or components of the code in isolation.
-
-**Steps:**
-
-1.  **Run Unit Tests:**
-
-    ```bash
-    pytest tests/unit
-    ```
-
-    - This command executes all test files within the `tests/unit` directory.
-
-## Configuration
-
-You can find further configuration parameters in [customer_service/config.py](./customer_service/config.py). This incudes parameters such as agent name, app name and llm model used by the agent.
+After you have saved your changes to the `prompts.py` file, the new instructions will not take effect until you redeploy the agent to the Agent Engine. You can do this by following the deployment steps outlined in the "Deployment on Google Agent Engine" section.
 
 ## Deployment on Google Agent Engine
 
@@ -358,8 +270,8 @@ curl -X POST \
   -H "X-Goog-User-Project: ${PROJECT_ID}" \
   "https://discoveryengine.googleapis.com/v1alpha/projects/${PROJECT_ID}/locations/global/collections/default_collection/engines/your-engine-id/assistants/default_assistant/agents" \
   -d '{
-    "displayName": "CJ Customer Service Agent",
-    "description": "CJ Customer Service Agent",
+    "displayName": "OC-Agent-YYYYMMDD",
+    "description": "OC Agent for morning call summary",
     "icon": {
        "uri": "https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/support_agent/default/24px.svg"
      },
@@ -374,7 +286,65 @@ curl -X POST \
   }'
 ```
 
-If successful, the command will return a JSON response describing the new agent connection it just created. You should then be able to see the "CJ Customer Service Agent" listed as an available tool in your AgentSpace configuration.
+If successful, the command will return a JSON response describing the new agent connection it just created. You should then be able to see the "OC-Agent-YYYYMMDD" listed as an available tool in your AgentSpace configuration.
+
+### 3. Updating the Agent Engine
+
+For iterative development, you can update the deployed agent by pointing the AgentSpace agent to a new version of the Reasoning Engine. This is a blue/green deployment strategy that allows for instant rollback.
+
+**Step 1: Deploy a New Reasoning Engine**
+
+Follow the steps in the "Deployment on Google Agent Engine" section to deploy a new version of your agent. This will give you a new Reasoning Engine ID.
+
+**Step 2: Update the AgentSpace Agent**
+
+Use the following `curl` command to update the AgentSpace agent to point to the new Reasoning Engine. This is a `PATCH` request that updates the `reasoningEngine` field of the agent.
+
+**Get Your Access Token:**
+```bash
+gcloud auth print-access-token
+```
+
+**Run the `curl` Command:**
+```bash
+# Set your Project ID
+export PROJECT_ID="your-gcp-project-id"
+export ENGINE_ID="your-agentspace-engine-id"
+export ASSISTANT_ID="default_assistant"
+export AGENT_ID="your-agent-id"
+export NEW_ENGINE_ID="your-new-reasoning-engine-id"
+
+# Replace the placeholder and run the command
+curl -X PATCH \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  -H "X-Goog-User-Project: ${PROJECT_ID}" \
+  "https://discoveryengine.googleapis.com/v1alpha/projects/${PROJECT_ID}/locations/global/collections/default_collection/engines/${ENGINE_ID}/assistants/${ASSISTANT_ID}/agents/${AGENT_ID}?updateMask=adkAgentDefinition.provisionedReasoningEngine.reasoningEngine" \
+  -d 	'{ "adkAgentDefinition": { "provisionedReasoningEngine": { "reasoningEngine": "projects/${PROJECT_ID}/locations/us-central1/reasoningEngines/${NEW_ENGINE_ID}" } } }'
+```
+
+**Important:**
+-   `your-gcp-project-id`: Your Google Cloud project ID.
+-   `your-agentspace-engine-id`: The ID of your AgentSpace engine.
+-   `your-agent-id`: The ID of the agent you want to update.
+-   `your-new-reasoning-engine-id`: The ID of the new Reasoning Engine you deployed.
+
+You will also need to include the `displayName`, `description` and `tool_description` in the payload to avoid errors.
+
+
+## AgentSpace Agents
+
+### Live Agent
+
+The live version of the agent is available at the following URL:
+
+[https://vertexaisearch.cloud.google.com/home/cid/7286c13e-bc26-4dd8-a058-82f2c75c1afd/r/agent/6840441290030617211](https://vertexaisearch.cloud.google.com/home/cid/7286c13e-bc26-4dd8-a058-82f2c75c1afd/r/agent/6840441290030617211)
+
+### Test Agent
+
+A test version of the agent is also available for development and testing purposes.
+
+[https://vertexaisearch.cloud.google.com/home/cid/7286c13e-bc26-4dd8-a058-82f2c75c1afd/r/agent/6583307635341617033](https://vertexaisearch.cloud.google.com/home/cid/7286c13e-bc26-4dd8-a058-82f2c75c1afd/r/agent/6583307635341617033)
 
 ## Disclaimer
 

@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class AgentModel(BaseModel):
     """Agent model settings."""
 
-    name: str = Field(default="customer_service_agent")
+    name: str = Field(default="OC_Agent")
     model: str = Field(default="gemini-2.5-flash")
 
 
