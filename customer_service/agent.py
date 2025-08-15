@@ -18,7 +18,7 @@ import logging
 from google.adk import Agent
 from .config import Config
 from .prompts import INSTRUCTION
-from .tools.tools import generate_document
+from .tools.tools import generate_document, upload_transcript
 
 configs = Config()
 
@@ -30,5 +30,5 @@ root_agent = Agent(
     model=configs.agent_settings.model,
     instruction=INSTRUCTION,
     name=configs.agent_settings.name,
-    tools=[generate_document],
+    tools=[generate_document, upload_transcript],
 )

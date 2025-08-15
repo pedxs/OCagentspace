@@ -76,6 +76,7 @@ else:
         app,
         requirements=[
             AGENT_WHL_FILE,
+            "python-docx",
         ],
         extra_packages=[AGENT_WHL_FILE],
     )
